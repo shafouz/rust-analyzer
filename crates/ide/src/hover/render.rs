@@ -1,5 +1,5 @@
 //! Logic for rendering the different hover messages
-use std::fmt::Display;
+use std::{backtrace::Backtrace, fmt::Display};
 
 use either::Either;
 use hir::{
@@ -743,6 +743,8 @@ fn find_std_module(famous_defs: &FamousDefs<'_, '_>, name: &str) -> Option<hir::
 fn local(db: &RootDatabase, it: hir::Local, config: &HoverConfig) -> Option<Markup> {
     let ty = it.ty(db);
     let ty = ty.display_truncated(db, None);
+    eprintln!(">>>>>> DEBUGPRINT[18]: render.rs:746: ty={}", ty.to_string());
+
     let is_mut = if it.is_mut(db) { "mut " } else { "" };
     let mut desc = match it.primary_source(db).into_ident_pat() {
         Some(ident) => {

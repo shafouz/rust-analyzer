@@ -82,7 +82,7 @@ use nameres::DefMap;
 use stdx::impl_from;
 use syntax::ast;
 
-use ::tt::token_id as tt;
+use tt::token_id as tt;
 
 use crate::{
     builtin_type::BuiltinType,
@@ -681,6 +681,7 @@ impl Clone for Box<dyn OpaqueInternableThing> {
 pub struct InTypeConstId(salsa::InternId);
 impl_intern!(InTypeConstId, InTypeConstLoc, intern_in_type_const, lookup_intern_in_type_const);
 
+#[allow(clippy::derived_hash_with_manual_eq)]
 #[derive(Debug, Hash, Eq, Clone)]
 pub struct InTypeConstLoc {
     pub id: AstId<ast::ConstArg>,

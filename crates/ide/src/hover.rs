@@ -1,7 +1,10 @@
 mod render;
+mod lab;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests2;
 
 use std::iter;
 
@@ -15,7 +18,12 @@ use ide_db::{
     FxIndexSet, RootDatabase,
 };
 use itertools::Itertools;
-use syntax::{ast, AstNode, SyntaxKind::*, SyntaxNode, T};
+use syntax::{
+    ast::{self, make::tokens::doc_comment},
+    AstNode,
+    SyntaxKind::*,
+    SyntaxNode, T,
+};
 
 use crate::{
     doc_links::token_as_doc_comment,
@@ -173,7 +181,8 @@ fn hover_simple(
         .find_map(|token| {
             // FIXME: Definition should include known lints and the like instead of having this special case here
             let attr = token.parent_ancestors().find_map(ast::Attr::cast)?;
-            render::try_for_lint(&attr, token)
+            let lint = render::try_for_lint(&attr, token);
+            lint
         })
         // try definitions
         .or_else(|| {
@@ -190,7 +199,10 @@ fn hover_simple(
                 })
                 .flatten()
                 .unique_by(|&(def, _)| def)
-                .filter_map(|(def, node)| hover_for_definition(sema, file_id, def, &node, config))
+                .filter_map(|(def, node)| {
+                    let h = hover_for_definition(sema, file_id, def, &node, config);
+                    h
+                })
                 .reduce(|mut acc: HoverResult, HoverResult { markup, actions }| {
                     acc.actions.extend(actions);
                     acc.markup = Markup::from(format!("{}\n---\n{markup}", acc.markup));
@@ -294,19 +306,22 @@ pub(crate) fn hover_for_definition(
         Definition::BuiltinType(_) => Some(FamousDefs(sema, sema.scope(node)?.krate())),
         _ => None,
     };
-    render::definition(sema.db, definition, famous_defs.as_ref(), config).map(|markup| {
-        HoverResult {
-            markup: render::process_markup(sema.db, definition, &markup, config),
-            actions: [
-                show_implementations_action(sema.db, definition),
-                show_fn_references_action(sema.db, definition),
-                runnable_action(sema, definition, file_id),
-                goto_type_action_for_def(sema.db, definition),
-            ]
-            .into_iter()
-            .flatten()
-            .collect(),
-        }
+
+    // if let Some(FamousDefs(_sema, _crate)) = famous_defs {
+    // };
+
+    let def = render::definition(sema.db, definition, famous_defs.as_ref(), config);
+    def.map(|markup| HoverResult {
+        markup: render::process_markup(sema.db, definition, &markup, config),
+        actions: [
+            show_implementations_action(sema.db, definition),
+            show_fn_references_action(sema.db, definition),
+            runnable_action(sema, definition, file_id),
+            goto_type_action_for_def(sema.db, definition),
+        ]
+        .into_iter()
+        .flatten()
+        .collect(),
     })
 }
 

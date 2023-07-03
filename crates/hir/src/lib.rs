@@ -133,7 +133,7 @@ pub use {
         ExpandResult, HirFileId, InFile, MacroFile, Origin,
     },
     hir_ty::{
-        display::{ClosureStyle, HirDisplay, HirDisplayError, HirWrite},
+        display::{ClosureStyle, DisplayTarget, HirDisplay, HirDisplayError, HirWrite},
         layout::LayoutError,
         mir::MirEvalError,
         PointerCast, Safety,
@@ -984,7 +984,8 @@ impl HasVisibility for Field {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Struct {
-    pub(crate) id: StructId,
+    pub id: StructId,
+    // pub(crate) id: StructId,
 }
 
 impl Struct {
